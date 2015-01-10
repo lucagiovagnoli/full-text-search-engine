@@ -29,6 +29,7 @@ public class HashedIndex implements Index {
     
     private boolean loadedFromFile = false;
     private IndexStoragerOnDisk storager = new IndexStoragerOnDisk(this);
+    private double[] leftEigenvector;
     
     public void load(){ 
     	storager.loadManagementMapsFromDisk();
@@ -40,6 +41,10 @@ public class HashedIndex implements Index {
     
     public int size(){
     	return index.keySet().size();    	
+    }
+    
+    public void setLeftEigenvector(double[] leftEigenvector){
+    	this.leftEigenvector = leftEigenvector;
     }
     
     /**
@@ -156,7 +161,7 @@ public class HashedIndex implements Index {
 	    			it = query.terms.iterator();
 	    			while (it.hasNext()){
 		    			plist = getPostings(it.next());
-		    			double wtq = 1; // FasrCosineScore !!
+		    			double wtq = 1; // FastCosineScore !!
 //		    			double wtq = 1 * Math.log((double)N/((double)plist.get_df())) / Math.sqrt((double) query.terms.size());
 		    			plist.rankedRetr(scores, wtq);	
 	    			}
@@ -175,7 +180,13 @@ public class HashedIndex implements Index {
 	    			
 	    			break;
 	    		default:
-	    			break;	    			
+	    			break;	    
+	    			
+	    		//case Index.PAGERANK:
+	    			
+	    			
+	    			
+	    			
 	    	}
 		}
 		catch (NoSuchElementException e){

@@ -9,6 +9,8 @@
 
 package ir;
 
+import ir.PageRank.algorithm;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.BufferedReader;
@@ -17,6 +19,7 @@ import java.util.LinkedList;
 import java.util.StringTokenizer;
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 import javax.swing.event.*;
 
@@ -88,6 +91,7 @@ public class SearchGUI extends JFrame {
     JRadioButtonMenuItem tfidfItem = new JRadioButtonMenuItem( "tf-idf" );
     JRadioButtonMenuItem pagerankItem = new JRadioButtonMenuItem( "PageRank" );
     JRadioButtonMenuItem combinationItem = new JRadioButtonMenuItem( "Combination" );
+    JMenuItem computePRItem = new JMenuItem( "Compute PageRank" );
     JRadioButtonMenuItem unigramItem = new JRadioButtonMenuItem( "Unigram" );
     JRadioButtonMenuItem bigramItem = new JRadioButtonMenuItem( "Bigram" );
     JRadioButtonMenuItem subphraseItem = new JRadioButtonMenuItem( "Subphrase" );
@@ -127,6 +131,7 @@ public class SearchGUI extends JFrame {
 	rankingMenu.add( tfidfItem ); 
 	rankingMenu.add( pagerankItem ); 
 	rankingMenu.add( combinationItem ); 
+	rankingMenu.add(computePRItem);
 	structureMenu.add( unigramItem ); 
 	structureMenu.add( bigramItem ); 
 	structureMenu.add( subphraseItem ); 
@@ -136,6 +141,7 @@ public class SearchGUI extends JFrame {
 	ranking.add( tfidfItem ); 
 	ranking.add( pagerankItem );
 	ranking.add( combinationItem ); 
+	ranking.add(computePRItem);
 	structure.add( unigramItem ); 
 	structure.add( bigramItem ); 
 	structure.add( subphraseItem ); 
@@ -334,6 +340,39 @@ public class SearchGUI extends JFrame {
 		};
 	combinationItem.addActionListener( setCombinationRanking );
 
+	Action computePR= new AbstractAction() {
+		public void actionPerformed( ActionEvent e ) {
+
+			double[] leftEigenvector;
+			
+			/* check if the pagerank already exists on disk */
+			File f = new File("indexOnDisk1/pagerank.txt");
+			if(f.exists() && !f.isDirectory()) { 
+				System.out.println("Pagerank già sul disco.");
+				leftEigenvector = (double[]) IndexStoragerOnDisk.loadObjectFromDisk("pagerank.txt");
+				PageRank.docName = (String[]) IndexStoragerOnDisk.loadObjectFromDisk("docNamePR.txt");
+			}
+
+			else{
+				int T = 100;
+		    	int m = 100;
+		    	double c = 0.85;
+	
+			    PageRank pr = new PageRank("./svwiki_links/links10000.txt", c);
+		    	leftEigenvector = pr.computePagerank(algorithm.monteCarlo3, T, m);
+		    	
+		    	IndexStoragerOnDisk.saveObjectToFile(leftEigenvector, "pagerank.txt");
+		    	IndexStoragerOnDisk.saveObjectToFile(PageRank.docName, "docNamePR.txt");
+		    }
+	    	
+			indexer.index.setLeftEigenvector(leftEigenvector);
+	    	TestingPR tester = new TestingPR(PageRank.docName ,leftEigenvector);
+	    	tester.printFirstKResults();
+	    	
+		}
+		};
+	computePRItem.addActionListener(computePR);
+	
 	Action setUnigramStructure = new AbstractAction() {
 		public void actionPerformed( ActionEvent e ) {
 			structureType = Index.UNIGRAM;

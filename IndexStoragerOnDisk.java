@@ -27,7 +27,7 @@ public class IndexStoragerOnDisk{
 	private Index index;
 	private HashMap<String,String> termFileMap = new HashMap<String,String>();
 	private int nomefile=0;
-	private String dirName = "indexOnDisk1";
+	public static String dirName = "indexOnDisk1";
 	
 	public IndexStoragerOnDisk(Index index){
 		this.index = index;
@@ -70,7 +70,7 @@ public class IndexStoragerOnDisk{
 	}
 	
 	
-	public Object loadObjectFromDisk(String filename){
+	public static Object loadObjectFromDisk(String filename){
 		Object res=null;
 		try{
 			FileInputStream inputFile = new FileInputStream(dirName+"/"+filename);
@@ -152,7 +152,7 @@ public class IndexStoragerOnDisk{
 		System.out.println("Time for saving on storage (ms): "+tRes/1000000);
 	}
 	
-	private void saveObjectToFile(Object obj,String filename){
+	public static void saveObjectToFile(Object obj,String filename){
     	try{
     		FileOutputStream outputFile = new FileOutputStream(dirName+"/"+filename);
     		ObjectOutputStream outStream = new ObjectOutputStream(outputFile);
@@ -165,7 +165,7 @@ public class IndexStoragerOnDisk{
     	}
 	}
 	    
-    public void closeStream(Closeable stream){
+    public static void closeStream(Closeable stream){
 		try{
     		stream.close();
 		}

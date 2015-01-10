@@ -44,6 +44,7 @@ public interface Index {
     public void save();
     public void load();
     public int size();
+    public void setLeftEigenvector(double[] leftEigenvector);
 
 }
 		    
