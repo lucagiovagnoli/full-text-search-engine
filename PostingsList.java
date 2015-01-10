@@ -53,8 +53,7 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
     		lastEntry = list.getLast();
     		if(lastEntry.docID==docID) {
     			/** update the offset **/
-    			lastEntry.addOffset(offset);  //add to the offset list
-    			lastEntry.setFrequency(lastEntry.getFrequency()+1); //freq++
+    			lastEntry.addOffset(offset);  //add to the offset list & freq++
     			return;
     		}
 /*    		for(int i=list.size()-1; i>=0; i--){
@@ -114,21 +113,21 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
 	}
 	
 	/** RANKED RETRIEVAL **/
-	public void rankEntries(int Ndocs, HashMap<String,Integer> docLengths){
+	public void rankedRetr(double[] scores,double wtq){
 		
 		Iterator<PostingsEntry> it = list.iterator();
 		PostingsEntry elem = null;
 		
 		while(it.hasNext()){
 			elem = it.next();
-			elem.computeScore(Ndocs, get_df(), docLengths);
+			scores[elem.docID] += wtq * elem.computeScore(get_df());
 		}
-		
-		Collections.sort(list);
 		
 	}
 	
-	
+	public void sortByScores(){
+		Collections.sort(list);
+	}
     
     public String toString()  {
     	String stampa = "Posting list with number of elements:"+list.size()+"\nElements: \n";

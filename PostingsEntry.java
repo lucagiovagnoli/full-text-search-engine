@@ -36,9 +36,10 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
 		positions.add(offset);
 	}
 	
-	public void computeScore(int N,int df, HashMap<String,Integer> docLengths){
-		System.out.println(docLengths.get(""+docID));
-		this.score = this.frequency * Math.log(N/df) / docLengths.get(""+docID);
+	public double computeScore(int df){
+		int N = Index.docIDs.size();
+	//	System.out.println("frequency:"+frequency+" size: "+positions.size()+"N: "+N+"df: "+df+"lenD : "+Index.docLengths.get(""+docID));
+		return this.frequency * Math.log(N/df) / Index.docLengths.get(""+docID);
 	}
 	
 	/** Algorithm for **/
@@ -70,8 +71,8 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
      *  The comparison is defined so that entries will be put in 
      *  descending order.
      */
-    public int compareTo( PostingsEntry other ) {
-	return Double.compare( other.score, score );
+    public int compareTo(PostingsEntry other) {
+	return Double.compare(other.score, score);
     }
     
     public String toString(){

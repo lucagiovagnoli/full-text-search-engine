@@ -24,6 +24,10 @@ public class HashedIndex implements Index {
 
     /** The index as a hashtable. */
     private HashMap<String,PostingsList> index = new HashMap<String,PostingsList>();
+
+  //  private HashMap<String,Integer> docEuclideanLenghts = new HashMap<String,Integer>();
+  //  private HashMap<String,Integer> wordOccurrences = new HashMap<String,Integer>();
+    
     private boolean loadedFromFile = false;
     private IndexStoragerOnDisk storager = new IndexStoragerOnDisk(this);
     
@@ -39,14 +43,12 @@ public class HashedIndex implements Index {
     	return index.keySet().size();    	
     }
     
-    public int getNdocs(){
-    	return docIDs.size();
-    }
-    
     /**
      *  Inserts this token in the index.
      */
     public void insert(String token, int docID, int offset ) {
+    	
+    	//wordOccurrences.put(token, wordOccurrences.get(token)+1);
     	
     	/* if the term is there already I add it to the postings list */
 		if(index.containsKey(token)){
@@ -147,12 +149,30 @@ public class HashedIndex implements Index {
 
 	    		case Index.RANKED_QUERY:
 	    			
+	    			int N = Index.docIDs.size();
+	    			double[] scores = new double[N];
+	    			PostingsList plist =null;
+	    			
+	    			/* puts scores into the array for each document */
 	    			it = query.terms.iterator();
-	    			String term = it.next();
+	    			while (it.hasNext()){
+		    			String term = it.next();
+		    			plist = getPostings(term);
+		    			double wtq = 1 *Math.log(N/plist.get_df());
+		    			plist.rankedRetr(scores, wtq);	
+	    			}
 	    			
-	    			res = getPostings(term);
-	    			res.rankEntries(getNdocs(), docLengths);	    			
+	    			/* Construct resulting posting list */
+	    			res = new PostingsList();
+	    			for (int i=0;i<N;i++){
+	    				if(scores[i]!=0){
+	    					PostingsEntry elem = new PostingsEntry(i);
+	    					elem.score = scores[i];
+	    					res.add(elem);
+	    				}
+	    			}
 	    			
+	    			res.sortByScores();
 	    			
 	    			break;
 	    		default:
