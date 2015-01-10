@@ -15,13 +15,19 @@ import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Closeable;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 
 public class IndexStoragerOnDisk{
 	
+	public static int wordsPerFile=1000;
 	private Index index;
 	private HashMap<String,String> termFileMap = new HashMap<String,String>();
 	private int nomefile=0;
-	private String dirName = "indexOnDisk";
+	private String dirName = "indexOnDisk1";
 	
 	public IndexStoragerOnDisk(Index index){
 		this.index = index;
@@ -30,6 +36,17 @@ public class IndexStoragerOnDisk{
 	private String generateFileName(){
 		nomefile++;
 		return "f"+nomefile;
+	}
+	
+	class RetrievalInfo{
+
+		String filename;
+		int offset;
+
+		public RetrievalInfo(String filename,int offset){
+			this.filename = filename;
+			this.offset = offset;
+		}		
 	}
 		
 	public void loadManagementMapsFromDisk(){
@@ -74,32 +91,53 @@ public class IndexStoragerOnDisk{
 	public void saveIndexOnDisk(){
     	
 		String filename="";
-	    	
+		FileOutputStream outputFile =null;
+		ObjectOutputStream outStream = null;	
+		FileOutputStream outputFile2 = null;
+		BufferedWriter writer = null;
+		
 		/* create folder where to put the index */
-		File dir = new File("indexOnDisk");
+		File dir = new File(dirName);
+		dir.mkdir();
+		dir = new File(dirName+"/allWordsOfFile");
 		dir.mkdir();
 		
 		Iterator<String> iterOnIndex = index.getDictionary();
 		
-		while(iterOnIndex.hasNext()){
-	    	String term = iterOnIndex.next();
-	    	filename = generateFileName();
-	    	
-	    	/* remember in which file I saved the PostingList for that term */
-	    	termFileMap.put(term,filename);
-	    	
-	    	/* try to save the PostingsList into the file */
-        	try{
-        		FileOutputStream outputFile = new FileOutputStream(dirName+"/"+filename);
-        		ObjectOutputStream outStream = new ObjectOutputStream(outputFile);
-	        	outStream.writeObject(index.getPostings(term));
+		long t0 = System.nanoTime();
+		
+		try{
+			while(iterOnIndex.hasNext()){
+				
+		    	filename = generateFileName();
+		     	
+	        	outputFile = new FileOutputStream(dirName+"/"+filename);
+	        	outStream = new ObjectOutputStream(outputFile);
+	        	outputFile2 = new FileOutputStream(dirName+"/allWordsOfFile/"+filename);
+	        	writer = new BufferedWriter(new OutputStreamWriter(outputFile2));
+		     	
+				for(int i=0;i<wordsPerFile && iterOnIndex.hasNext();i++){
+					String term = iterOnIndex.next();
+	
+					/* remember in which file I saved the PostingList for that term */
+					termFileMap.put(term,filename);
+			    	
+			    	/* save the PostingsList into the file */
+		       	    outStream.writeObject(index.getPostings(term));
+			    	writer.write(term);
+			    	writer.newLine();		
+				}
+				writer.flush();
 	    		closeStream(outputFile);
 	    		closeStream(outStream);
-	    	}
-	    	catch (IOException e){
-	    		System.out.println("Errore IO: problemi nella serializzazione. Term: "+term+".\n"+e.getMessage());
-	    	}
+	    		closeStream(outputFile2);
+	    		closeStream(writer);
+			}
 		}
+			
+    	catch (IOException e){
+    		System.out.println("Errore IO: problemi nella serializzazione.\n"+e.getMessage());
+    	}
 		
 		/** Save mapping ID to paths and ID to lenghts **/
 		saveObjectToFile(index.docIDs,"IDtoPaths");
@@ -107,7 +145,11 @@ public class IndexStoragerOnDisk{
 		
 		/** save TermFileMap on Disk **/
 		saveObjectToFile(termFileMap,"termFileMap");
-
+		
+		long t1 = System.nanoTime();
+		long tRes = t1-t0;
+		System.out.println("Time for saving on storage (ns): "+tRes);
+		System.out.println("Time for saving on storage (ms): "+tRes/1000000);
 	}
 	
 	private void saveObjectToFile(Object obj,String filename){
@@ -132,7 +174,7 @@ public class IndexStoragerOnDisk{
 		}    	
     }
     
-    public PostingsList loadPostingsListFromDisk(String term){
+    public void loadPostingsListFromDisk(HashMap<String,PostingsList> uIndex, String term){
     	
     	PostingsList loadedList = null;
   
@@ -141,9 +183,22 @@ public class IndexStoragerOnDisk{
     		if(filename != null) {
 		    	FileInputStream inputFile = new FileInputStream(dirName+"/"+filename);
 		    	ObjectInputStream inObj = new ObjectInputStream(inputFile);
-		    	loadedList = (PostingsList) inObj.readObject();
-	    		closeStream(inputFile);
+		    	FileInputStream inputFile2 = new FileInputStream(dirName+"/allWordsOfFile/"+filename);
+		    	BufferedReader br = new BufferedReader(new InputStreamReader(inputFile2, Charset.forName("UTF-8")));
+		    	String line="";
+		    	
+		    	while((line = br.readLine()) != null){
+		    		loadedList = (PostingsList) inObj.readObject();
+		    		uIndex.put(line,loadedList);
+		    	}
+		    	
+		    	closeStream(inputFile);
 	    		closeStream(inObj);
+		    	closeStream(inputFile2);
+	    		closeStream(br);
+    		}
+    		else{
+    			System.out.println("Term not in the index - storage file not found.");
     		}
     	}
     	catch (IOException e){
@@ -152,8 +207,6 @@ public class IndexStoragerOnDisk{
     	catch (ClassNotFoundException e1){
     		System.out.println(e1.getMessage());
     	}
-    
-    	return loadedList;
     }
 }
 

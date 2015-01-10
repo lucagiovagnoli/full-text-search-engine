@@ -11,11 +11,12 @@ package ir;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.io.Serializable;
+import java.util.Comparator;
 
 /**
  *   A list of postings for a given word.
  */
-public class PostingsList implements Serializable {
+public class PostingsList implements Serializable,Comparable<PostingsList> {
     
     /** The postings list as a linked list. */
     private LinkedList<PostingsEntry> list = new LinkedList<PostingsEntry>();
@@ -39,9 +40,9 @@ public class PostingsList implements Serializable {
     	PostingsEntry elem;
     	if(list.isEmpty() == false){
     		/** check if this postings list already contains the docID **/
-        	/** NOTE that I check the last element only **/
+        	/** NOTE that I check the last element only (for assignment 1 is sufficient and optimized)**/
+    		
     		if(list.getLast().docID==docID) {
-    			//System.out.println(list.getLast().docID+" "+list.get(list.size()-1).docID);
     			/** update the offset **/
     			list.getLast().addOffset(offset); 
     			return;
@@ -58,6 +59,7 @@ public class PostingsList implements Serializable {
 		list.add(elem);
     }
     
+    /* Sorting useless because implicit in the inserting of assignment 1*
 //    public void sortList(){
 //		Collections.sort(list); 
 //    }
@@ -103,13 +105,18 @@ public class PostingsList implements Serializable {
 	
     
     public String toString()  {
-    	String stampa = "";
+    	String stampa = "Posting list with number of elements:"+list.size()+"\nElements: \n";
     	for(PostingsEntry elemento: list){
     		stampa += elemento.toString()+"\n";
     	}
     	return stampa;
     }
 
+	@Override
+	public int compareTo(PostingsList other) {
+		// TODO Auto-generated method stub
+		return this.list.size()-other.list.size();
+	}
 }
 	
 

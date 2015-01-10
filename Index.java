@@ -43,6 +43,7 @@ public interface Index {
     
     public void save();
     public void load();
+    public int size();
 
 }
 		    

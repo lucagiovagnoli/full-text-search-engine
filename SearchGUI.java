@@ -81,6 +81,7 @@ public class SearchGUI extends JFrame {
     JMenuItem saveItem = new JMenuItem( "Save index and exit" );
     JMenuItem loadItem = new JMenuItem( "Load index" );
     JMenuItem indexItem = new JMenuItem( "Index now" );
+    JMenuItem  avgItem = new JMenuItem( "Avg test" );
     JMenuItem quitItem = new JMenuItem( "Quit" );
     JRadioButtonMenuItem intersectionItem = new JRadioButtonMenuItem( "Intersection query" );
     JRadioButtonMenuItem phraseItem = new JRadioButtonMenuItem( "Phrase query" );
@@ -120,6 +121,7 @@ public class SearchGUI extends JFrame {
 	fileMenu.add( saveItem );
 	fileMenu.add( loadItem );
 	fileMenu.add( indexItem );
+	fileMenu.add( avgItem);
 	fileMenu.add( quitItem );
 	optionsMenu.add( intersectionItem );
 	optionsMenu.add( phraseItem );
@@ -279,10 +281,23 @@ public class SearchGUI extends JFrame {
 		public void actionPerformed( ActionEvent e ) {
 			/** My Index Button **/
 			index();
+			System.out.println("Number of unique words:"+indexer.index.size());
 		}
 	    };
 	indexItem.addActionListener( indexNow );
 	
+	Action tenQueriesAvgTime = new AbstractAction() {
+		public void actionPerformed( ActionEvent e ) {
+
+			String[] array = {"antikens underverk","olympiska spel och fred","europacupen",
+					 "konflikten i palestina","snowboard","den europeiska bilindustrin",
+					 "enhetlig europeisk valuta","sex i reklam","lutande tornet i pisa","genteknik"};
+			for(int i=0;i<10;i++){
+			    indexer.index.search(new Query(array[i]), queryType, rankingType, structureType);				
+			}
+		}
+	    };
+	avgItem.addActionListener( tenQueriesAvgTime );
 	
 	Action quit = new AbstractAction() {
 		public void actionPerformed( ActionEvent e ) {
