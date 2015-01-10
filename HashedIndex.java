@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
-
 /**
  *   Implements an inverted index as a Hashtable from words to PostingsLists.
  */
@@ -151,17 +150,17 @@ public class HashedIndex implements Index {
 	    			
 	    			int N = Index.docIDs.size();
 	    			double[] scores = new double[N];
-	    			PostingsList plist =null;
+	    			PostingsList plist = null;
 	    			
 	    			/* puts scores into the array for each document */
 	    			it = query.terms.iterator();
 	    			while (it.hasNext()){
-		    			String term = it.next();
-		    			plist = getPostings(term);
-		    			double wtq = 1 *Math.log(N/plist.get_df());
+		    			plist = getPostings(it.next());
+		    			double wtq = 1; // FasrCosineScore !!
+//		    			double wtq = 1 * Math.log((double)N/((double)plist.get_df())) / Math.sqrt((double) query.terms.size());
 		    			plist.rankedRetr(scores, wtq);	
 	    			}
-	    			
+	    				    			
 	    			/* Construct resulting posting list */
 	    			res = new PostingsList();
 	    			for (int i=0;i<N;i++){

@@ -39,7 +39,7 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
 	public double computeScore(int df){
 		int N = Index.docIDs.size();
 	//	System.out.println("frequency:"+frequency+" size: "+positions.size()+"N: "+N+"df: "+df+"lenD : "+Index.docLengths.get(""+docID));
-		return this.frequency * Math.log(N/df) / Index.docLengths.get(""+docID);
+		return this.frequency * Math.log((double)N/((double)df)) / ((double) Index.docLengths.get(""+docID));
 	}
 	
 	/** Algorithm for **/

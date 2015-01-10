@@ -122,7 +122,6 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
 			elem = it.next();
 			scores[elem.docID] += wtq * elem.computeScore(get_df());
 		}
-		
 	}
 	
 	public void sortByScores(){
