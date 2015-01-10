@@ -35,12 +35,14 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
 		positions.add(offset);
 	}
 	
+	public void computeScore(int N,int df){
+		this.score = this.frequency * Math.log10(N/df);
+	}
+	
 	/** Algorithm for **/
 	public PostingsEntry precedes(PostingsEntry other, int relativeOffset){
 		PostingsEntry newElem = new PostingsEntry(this.docID);
-		int flag=0;
-		int offset1;
-		int offset2;
+		int flag=0,offset1,offset2;
 		for(int i=0;i<positions.size();i++){
 			offset1 = positions.get(i)+relativeOffset;
 			int j=other.positions.size()-1;
@@ -80,6 +82,10 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     public int getFrequency() {
 		return frequency;
 	}
+    
+    public void setFrequency(int freq){
+    	this.frequency = freq;
+    }
 
 }
 

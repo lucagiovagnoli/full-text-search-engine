@@ -8,10 +8,12 @@
 
 package ir;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.io.Serializable;
 import java.util.Comparator;
+import java.lang.Math;
 
 /**
  *   A list of postings for a given word.
@@ -20,11 +22,26 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
     
     /** The postings list as a linked list. */
     private LinkedList<PostingsEntry> list = new LinkedList<PostingsEntry>();
-
-
+    private int cf = 0;
+    
     /**  Number of postings in this list  */
     public int size() {
-	return list.size();
+    	return list.size();
+    }
+    
+    /** return document frequency of this term (size of the posting list ;) **/
+    public int get_df(){
+    	return list.size();
+    }
+    
+    /** return the term frequency in the collection **/
+    public int get_cf (){
+    	return cf;
+    }
+    
+    /** set the term frequency in the collection**/
+    public void set_cf(int newValue){
+    	cf = newValue;
     }
 
     /**  Returns the ith posting */
@@ -37,14 +54,17 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
     }
     
     public void add(int docID, int offset){
-    	PostingsEntry elem;
+    	PostingsEntry elem,lastEntry;
     	if(list.isEmpty() == false){
-    		/** check if this postings list already contains the docID **/
-        	/** NOTE that I check the last element only (for assignment 1 is sufficient and optimized)**/
     		
-    		if(list.getLast().docID==docID) {
+    		/** check if this postings list already contains the docID **/
+        	/** NOTE that I check the last element only (for the assignment is sufficient and optimized)**/
+    		
+    		lastEntry = list.getLast();
+    		if(lastEntry.docID==docID) {
     			/** update the offset **/
-    			list.getLast().addOffset(offset); 
+    			lastEntry.addOffset(offset);  //add to the offset list
+    			lastEntry.setFrequency(lastEntry.getFrequency()+1); //freq++
     			return;
     		}
 /*    		for(int i=list.size()-1; i>=0; i--){
@@ -102,6 +122,22 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
 		}
 		return resultingList;
 	}
+	
+	/** RANKED RETRIEVAL **/
+	public void rankEntries(int Ndocs){
+		
+		Iterator<PostingsEntry> it = list.iterator();
+		PostingsEntry elem = null;
+		
+		while(it.hasNext()){
+			elem = it.next();
+			elem.computeScore(Ndocs, get_df());
+		}
+		
+		Collections.sort(list);
+		
+	}
+	
 	
     
     public String toString()  {

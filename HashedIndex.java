@@ -39,6 +39,10 @@ public class HashedIndex implements Index {
     	return index.keySet().size();    	
     }
     
+    public int getNdocs(){
+    	return docIDs.size();
+    }
+    
     /**
      *  Inserts this token in the index.
      */
@@ -48,12 +52,14 @@ public class HashedIndex implements Index {
 		if(index.containsKey(token)){
 		    PostingsList lista = index.get(token);
 		    lista.add(docID,offset);
+//		    lista.set_cf(lista.get_cf()+1); // tf++
 		}
 		
 		/* otherwise I first create the Posting's List and then add it */
 		else{
 		    PostingsList lista = new PostingsList();
 		    lista.add(docID,offset);
+//		    lista.set_cf(lista.get_cf()+1); // tf++
 		    index.put(token,lista);
 		}
     }
@@ -89,7 +95,7 @@ public class HashedIndex implements Index {
     /**
      *  Searches the index for postings matching the query.
      */
-    public PostingsList search( Query query, int queryType, int rankingType, int structureType ) {
+    public PostingsList search(Query query, int queryType, int rankingType, int structureType ) {
     	
     	PostingsList res = null;
     	Iterator<String> it;
@@ -136,12 +142,23 @@ public class HashedIndex implements Index {
 	    					System.out.println("Parola "+term + " non presente nell'indice.");
 	    					throw new NullPointerException();
 	    				}
-	    				res = res.positional((temp),relativeOff);
+	    				res = res.positional(temp,relativeOff);
 		    			relativeOff++;
 	    			}
 	    			break;
-	    		default:
+
+	    		case Index.RANKED_QUERY:
+	    			
+	    			it = query.terms.iterator();
+	    			String term = it.next();
+	    			
+	    			res = getPostings(term);
+	    			res.rankEntries(getNdocs());	    			
+	    			
+	    			
 	    			break;
+	    		default:
+	    			break;	    			
 	    	}
 		}
 		catch (NoSuchElementException e){
