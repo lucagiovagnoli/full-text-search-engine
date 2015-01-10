@@ -32,14 +32,15 @@ public interface Index {
     public static final int BIGRAM = 1; 
     public static final int SUBPHRASE = 2; 
 	
-    public HashMap<String, String> docIDs = new HashMap<String,String>();
-    public HashMap<String, Integer> docLengths = new HashMap<String,Integer>();
-    public HashMap<String,String> docIDsToTitles = new HashMap<String,String>();
+    public static HashMap<String,String> docIDsToTitles = new HashMap<String,String>();
+    
+    public HashMap<String,String> docIDsToFilepath();
+    public HashMap<String,Integer> docIDsToLengths();
     
     public void insert( String token, int docID, int offset );
     public Iterator<String> getDictionary();
     public PostingsList getPostings( String token );
-    public PostingsList search( Query query, int queryType, int rankingType, int structureType );
+  //  public PostingsList search( Query query, int queryType, int rankingType, int structureType );
     public void cleanup();
     
     public HashMap<String,Double> getLeftEigenvector();

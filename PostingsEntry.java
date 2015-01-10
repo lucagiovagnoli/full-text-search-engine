@@ -36,8 +36,7 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
 		positions.add(offset);
 	}
 	
-	public double computeTfIdf(int df){
-		int N = Index.docIDs.size();
+	public double computeTfIdf(int df,int N){
 		//System.out.println("docname: "+Index.docIDs.get(""+docID)+" frequency: "+frequency+" size: "+positions.size()+" N: "+N+"df: "+df+"lenD : "+Index.docLengths.get(""+docID));
 		return this.frequency * Math.log(N/((double)df));
 	}

@@ -24,6 +24,9 @@ import java.util.NoSuchElementException;
  */
 public class HashedIndex implements Index {
 
+    public HashMap<String, String> docIDs = new HashMap<String,String>();
+    public HashMap<String, Integer> docLengths = new HashMap<String,Integer>();
+	
     /** The index as a hashtable. */
     private HashMap<String,PostingsList> index = new HashMap<String,PostingsList>();
     private boolean loadedFromFile = false;
@@ -59,7 +62,6 @@ public class HashedIndex implements Index {
 
     public void load(){ 
     	storager.loadManagementMapsFromDisk();
-    	storager.loadArticleTitles();
     	loadedFromFile = true;
     }
     public void save(){ 
@@ -74,9 +76,7 @@ public class HashedIndex implements Index {
      *  Inserts this token in the index.
      */
     public void insert(String token, int docID, int offset ) {
-    	
-    	//wordOccurrences.put(token, wordOccurrences.get(token)+1);
-    	
+    	    	
     	/* if the term is there already I add it to the postings list */
 		if(index.containsKey(token)){
 		    PostingsList lista = index.get(token);
@@ -119,42 +119,9 @@ public class HashedIndex implements Index {
     }
 
 
-    /**
-     *  Searches the index for postings matching the query.
-     */
-    public PostingsList search(Query query, int queryType, int rankingType, int structureType ) {
-    	
-    	PostingsList res = null;
-    	Iterator<String> it;
-    	SearchPerformer searcher = new SearchPerformer(this);
+    public HashMap<String,String> docIDsToFilepath(){return docIDs;}
+    public HashMap<String,Integer> docIDsToLengths(){return docLengths;}
 
-		try{
-			switch (queryType){
-	    		case Index.INTERSECTION_QUERY:
-	    			res=searcher.intersectionQuery(query);
-	    			break;
-	    		case Index.PHRASE_QUERY:
-	    			res=searcher.phraseQuery(query);
-	    			break;
-	    		case Index.RANKED_QUERY:
-	    			res=searcher.rankedQuery(query, rankingType);
-	    			break;
-	    		default:
-	    			break;	    
-	    	}
-		}
-		catch (NoSuchElementException e){
-			System.out.println("Empty query. "+e);
-			res=null;
-		}
-		catch (NullPointerException e1){
-			System.out.println("Term not in index. "+e1);
-			res=null;
-		}	    	
-    
-		return res;
-    }
-    
     /**
      *  No need for cleanup in a HashedIndex.
      */

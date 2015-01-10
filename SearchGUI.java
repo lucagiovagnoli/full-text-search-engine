@@ -34,6 +34,7 @@ public class SearchGUI extends JFrame {
 
     /**  The indexer creating the search index. */
     Indexer indexer = new Indexer();
+    SearchPerformer searcher;
 
     /**  The query posed by the user, used in search() and relevanceFeedbackSearch() */
     private Query query; 
@@ -87,6 +88,7 @@ public class SearchGUI extends JFrame {
     JMenuItem saveItem = new JMenuItem( "Save index and exit" );
     JMenuItem loadItem = new JMenuItem( "Load index" );
     JMenuItem indexItem = new JMenuItem( "Index now" );
+    JMenuItem indexBiwordItem = new JMenuItem( "Index Biword" );
     JMenuItem quitItem = new JMenuItem( "Quit" );
     JRadioButtonMenuItem intersectionItem = new JRadioButtonMenuItem( "Intersection query" );
     JRadioButtonMenuItem phraseItem = new JRadioButtonMenuItem( "Phrase query" );
@@ -94,7 +96,7 @@ public class SearchGUI extends JFrame {
     JRadioButtonMenuItem tfidfItem = new JRadioButtonMenuItem( "tf-idf" );
     JRadioButtonMenuItem pagerankItem = new JRadioButtonMenuItem( "PageRank" );
     JRadioButtonMenuItem combinationItem = new JRadioButtonMenuItem( "Combination" );
-    JMenuItem computePRItem = new JMenuItem( "Compute PageRank" );
+    //JMenuItem computePRItem = new JMenuItem( "Compute PageRank" );
     JRadioButtonMenuItem unigramItem = new JRadioButtonMenuItem( "Unigram" );
     JRadioButtonMenuItem bigramItem = new JRadioButtonMenuItem( "Bigram" );
     JRadioButtonMenuItem subphraseItem = new JRadioButtonMenuItem( "Subphrase" );
@@ -127,6 +129,7 @@ public class SearchGUI extends JFrame {
 	fileMenu.add( saveItem );
 	fileMenu.add( loadItem );
 	fileMenu.add( indexItem );
+	fileMenu.add(indexBiwordItem);
 	fileMenu.add( quitItem );
 	optionsMenu.add( intersectionItem );
 	optionsMenu.add( phraseItem );
@@ -134,7 +137,7 @@ public class SearchGUI extends JFrame {
 	rankingMenu.add( tfidfItem ); 
 	rankingMenu.add( pagerankItem ); 
 	rankingMenu.add( combinationItem ); 
-	rankingMenu.add(computePRItem);
+	//rankingMenu.add(computePRItem);
 	structureMenu.add( unigramItem ); 
 	structureMenu.add( bigramItem ); 
 	structureMenu.add( subphraseItem ); 
@@ -144,7 +147,7 @@ public class SearchGUI extends JFrame {
 	ranking.add( tfidfItem ); 
 	ranking.add( pagerankItem );
 	ranking.add( combinationItem ); 
-	ranking.add(computePRItem);
+	//ranking.add(computePRItem);
 	structure.add( unigramItem ); 
 	structure.add( bigramItem ); 
 	structure.add( subphraseItem ); 
@@ -187,24 +190,22 @@ public class SearchGUI extends JFrame {
 		    // we don't want to search at the same time we're indexing new files
 		    // (this might corrupt the index).
 		    synchronized ( indexLock ) {
-			results = indexer.index.search( query, queryType, rankingType, structureType ); 
+			results = searcher.search( query, queryType, rankingType, structureType ); 
 		    }
 		    StringBuffer buf = new StringBuffer();
 		    if ( results != null ) {
 			buf.append( "\nFound " + results.size() + " matching document(s)\n\n" );
 			for ( int i=0; i<results.size(); i++ ) {
 			    buf.append( " " + i + ". " );
-			    String filename = indexer.index.docIDs.get( "" + results.get(i).docID );
-			    if ( filename == null ) {
-				buf.append( "" + results.get(i).docID );
-			    }
-			    else {
-				buf.append( filename );
-			    }
-			    if ( queryType == Index.RANKED_QUERY ) {
-				buf.append( "   " + String.format( "%.6f", results.get(i).score )); 
-			    }
-			    
+			    String filename; 
+			    if(structureType==Index.BIGRAM) filename = indexer.biwordIndex.docIDsToFilepath().get( "" + results.get(i).docID );							    	
+			    else filename = indexer.index.docIDsToFilepath().get( "" + results.get(i).docID );
+
+			    if ( filename == null ) buf.append( "" + results.get(i).docID );
+			    else buf.append( filename );
+			   
+			    if ( queryType == Index.RANKED_QUERY ) buf.append( "   " + String.format( "%.6f", results.get(i).score )); 
+			   
 			    /*print name of the first 10 documents*/
 		        buf.append("\t"+ Index.docIDsToTitles.get(filename.split("/")[3].split(".txt")[0]));
 			    
@@ -240,13 +241,13 @@ public class SearchGUI extends JFrame {
 				// synchronized since we don't want to search at the same time we're indexing new files
 				// (this might corrupt the index).
 				synchronized ( indexLock ) {
-				    results = indexer.index.search( query, queryType, rankingType, structureType );
+				    results = searcher.search( query, queryType, rankingType, structureType );
 				}
 				buf.append( "\nSearch after relevance feedback:\n" );
 				buf.append( "\nFound " + results.size() + " matching document(s)\n\n" );
 				for ( int i=0; i<results.size(); i++ ) {
 				    buf.append( " " + i + ". " );
-				    String filename = indexer.index.docIDs.get( "" + results.get(i).docID );
+				    String filename = indexer.index.docIDsToFilepath().get( "" + results.get(i).docID );
 				    if ( filename == null ) {
 				    	buf.append( "" + results.get(i).docID );
 				    }
@@ -285,6 +286,7 @@ public class SearchGUI extends JFrame {
 		    resultWindow.setText( "\n  Loading index..." );
 			indexer.index.load();
 		    resultWindow.setText( "\n  Index loaded." );
+		    searcher = new SearchPerformer(indexer.index,indexer.biwordIndex);
 		}
 	    };
 	loadItem.addActionListener( loadIndex );
@@ -295,9 +297,20 @@ public class SearchGUI extends JFrame {
 			/** My Index Button **/
 			index();
 			System.out.println("Number of unique words:"+indexer.index.size());
+		    searcher = new SearchPerformer(indexer.index,indexer.biwordIndex);
 		}
 	    };
 	indexItem.addActionListener( indexNow );
+	
+	Action indexBiword = new AbstractAction() {
+		public void actionPerformed( ActionEvent e ) {
+			/** My IndexBiword Button **/
+			indexBiword();
+			System.out.println("Number of biwords:"+indexer.biwordIndex.size());
+		    searcher = new SearchPerformer(indexer.index,indexer.biwordIndex);
+		}
+	    };
+	indexBiwordItem.addActionListener(indexBiword);
 	
 	Action quit = new AbstractAction() {
 		public void actionPerformed( ActionEvent e ) {
@@ -349,29 +362,12 @@ public class SearchGUI extends JFrame {
 		};
 	combinationItem.addActionListener( setCombinationRanking );
 
-	Action computePR= new AbstractAction() {
+/*	Action computePR= new AbstractAction() {
 		public void actionPerformed( ActionEvent e ) {
 
-			/*
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 */
-	    	
 		}
 		};
-	computePRItem.addActionListener(computePR);
+	computePRItem.addActionListener(computePR); */
 	
 	Action setUnigramStructure = new AbstractAction() {
 		public void actionPerformed( ActionEvent e ) {
@@ -416,6 +412,17 @@ public class SearchGUI extends JFrame {
 	}
     };
 
+    
+    private void indexBiword(){
+    	synchronized ( indexLock ) {
+    	    resultWindow.setText( "\n  Indexing biword, please wait..." );
+    	    for ( int i=0; i<dirNames.size(); i++ ) {
+    	    	File dokDir = new File( dirNames.get( i ));
+    	    	indexer.processFilesBiword( dokDir );
+    	    }
+    	    resultWindow.setText( "\n  Done!" );
+    	}    	
+    }
 
     /* ----------------------------------------------- */
 
@@ -444,6 +451,7 @@ public class SearchGUI extends JFrame {
 
 
     public static void main( String[] args ) {
+    IndexStoragerOnDisk.loadArticleTitles();
 	SearchGUI s = new SearchGUI();
 	s.createGUI();
 	s.decodeArgs( args );

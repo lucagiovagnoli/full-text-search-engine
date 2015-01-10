@@ -113,26 +113,26 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
 	}
 	
 	/** RANKED RETRIEVAL (TD-IDF) **/
-	public void tfIdf(double[] scores, double wtq, double combinationWeight){
+	public void tfIdf(double[] scores, double wtq, double combinationWeight,int N){
 		
 		Iterator<PostingsEntry> it = list.iterator();
 		PostingsEntry elem = null;
 		
 		while(it.hasNext()){
 			elem = it.next();
-			scores[elem.docID] += combinationWeight * wtq * elem.computeTfIdf(get_df());
+			scores[elem.docID] += combinationWeight * wtq * elem.computeTfIdf(get_df(),N);
 		}
 	}
 	
 	/** RANKED RETRIEVAL (PAGERANK) **/
-	public void justPagerank(double[] scores, HashMap<String,Double> leftEigenvector, double combinationWeight){
+	public void justPagerank(double[] scores, HashMap<String,Double> leftEigenvector,HashMap<String,String> mapIDsToNames, double combinationWeight){
 		
 		Iterator<PostingsEntry> it = list.iterator();
 		PostingsEntry elem = null;
 		
 		while(it.hasNext()){
 			elem = it.next();
-			String mydocPath =  Index.docIDs.get(""+elem.docID);
+			String mydocPath =  mapIDsToNames.get(""+elem.docID);
 			String name = (mydocPath.split("/")[3]).split(".txt")[0];
 			if(leftEigenvector.containsKey(name)){
 				double pr = leftEigenvector.get(name);

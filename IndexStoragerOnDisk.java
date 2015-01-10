@@ -53,32 +53,18 @@ public class IndexStoragerOnDisk{
 		while (it.hasNext()){
 			String docID = it.next();
 			String path = docIDs.get(docID);
-			Index.docIDs.put(docID, path);
+			index.docIDsToFilepath().put(docID, path);
 		}
 
 		it = docLengths.keySet().iterator();
 		while (it.hasNext()){
 			String docID = it.next();
 			Integer offset = docLengths.get(docID);
-		    Index.docLengths.put(docID, offset);
+		    index.docIDsToLengths().put(docID, offset);
 		}
 		termFileMap = (HashMap<String,String>) loadObjectFromDisk("termFileMap");
 	}
-	
-	public void loadArticleTitles(){
-		 
-	    try{
-		    BufferedReader br = new BufferedReader(new FileReader("svwiki_links/articleTitles.txt"));
-		    String line = "";
-		    while((line=br.readLine()) != null) {
-		    	String[] words = line.split(";");
-			    Index.docIDsToTitles.put(words[0],words[1]);  
-		    }	
-		    br.close();
-	    }
-	    catch(IOException excep){System.out.println("Errore in lettura nomi files: "+excep);}	
-	}
-	
+		
 	public static Object loadObjectFromDisk(String filename){
 		Object res=null;
 		try{
@@ -149,8 +135,8 @@ public class IndexStoragerOnDisk{
     	}
 		
 		/** Save mapping ID to paths and ID to lenghts **/
-		saveObjectToFile(Index.docIDs,"IDtoPaths");
-		saveObjectToFile(Index.docLengths,"IDtoLengths");
+		saveObjectToFile(index.docIDsToFilepath(),"IDtoPaths");
+		saveObjectToFile(index.docIDsToLengths(),"IDtoLengths");
 		
 		/** save TermFileMap on Disk **/
 		saveObjectToFile(termFileMap,"termFileMap");
@@ -217,6 +203,21 @@ public class IndexStoragerOnDisk{
     		System.out.println(e1.getMessage());
     	}
     }
+    
+	public static void loadArticleTitles(){
+		 
+	    try{
+		    BufferedReader br = new BufferedReader(new FileReader("svwiki_links/articleTitles.txt"));
+		    String line = "";
+		    while((line=br.readLine()) != null) {
+		    	String[] words = line.split(";");
+			    Index.docIDsToTitles.put(words[0],words[1]);  
+		    }	
+		    br.close();
+	    }
+	    catch(IOException excep){System.out.println("Errore in lettura nomi files: "+excep);}	
+	}
+
 }
 
 

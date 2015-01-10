@@ -19,7 +19,7 @@ public class Query {
     
     public LinkedList<String> terms = new LinkedList<String>();
 	public LinkedList<Double> weights = new LinkedList<Double>();
-	public double queryLength = 0;
+	//public double queryLength = 0;
 
     /**
      *  Creates a new empty Query 
@@ -30,14 +30,28 @@ public class Query {
     /**
      *  Creates a new Query from a string of words
      */
-    public Query( String queryString  ) {
+    public Query(String queryString) {
 		StringTokenizer tok = new StringTokenizer( queryString );
 		while ( tok.hasMoreTokens() ) {
 		    terms.add( tok.nextToken() );
 		    weights.add( new Double(1) );
-		    queryLength+=1;
+	//	    queryLength+=1;
 		}    
     }
+
+    /* contructs a query constituted by biwords*/
+    public Query(Query normalQuery) {
+    	Iterator<String> it = normalQuery.terms.iterator();
+		String term1 = it.next();
+		while(it.hasNext()){
+			String term2 = it.next();
+			String biword = term1.concat(term2);
+			this.terms.add(biword);
+			this.weights.add(new Double(1));
+			term1 = term2;
+		}
+	}
+    
     
     /**
      *  Returns the number of terms
@@ -52,7 +66,7 @@ public class Query {
 		Query queryCopy = new Query();
 		queryCopy.terms = (LinkedList<String>) terms.clone();
 		queryCopy.weights = (LinkedList<Double>) weights.clone();
-		queryCopy.queryLength = queryLength;
+	//	queryCopy.queryLength = queryLength;
 		return queryCopy;
     }
     
@@ -75,7 +89,7 @@ public class Query {
 
        	for(int i=0;i<docIsRelevant.length;i++){
     		if(docIsRelevant[i]==true)	{
-    		    LinkedList<String> docTerms = getDocTerms(Index.docIDs.get(results.get(i).docID+""));
+    		    LinkedList<String> docTerms = getDocTerms(indexer.index.docIDsToFilepath().get(results.get(i).docID+""));
     			
     		    Iterator<String> it = docTerms.iterator();
     		    while(it.hasNext()){

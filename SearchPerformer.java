@@ -9,6 +9,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 
 /**
  * @author luca
@@ -21,18 +22,27 @@ public class SearchPerformer {
 	 **/
 	private double IDFcutoff = 1;  //if the term appears in more than IDFcutoffPercentage*documents, it is not considered
 	
+	
 	private PostingsList res = null;
 	private Index hashedIndex;
-	
+	private Index biwordIndex;
+
+
 	private Iterator<String> it;
 	private Iterator<Double> itWeights;
 	
 	/**
 	 * 
 	 */
-	public SearchPerformer(Index hashedIndex) {
-		this.hashedIndex = hashedIndex;		
+	public SearchPerformer(Index hashedIndex, Index biwordIndex) {
+		this.hashedIndex = hashedIndex;
+		this.biwordIndex = biwordIndex;
 	}
+	
+	public SearchPerformer(Index hashedIndex) {
+		this.hashedIndex = hashedIndex;
+	}
+
 	
 	public PostingsList intersectionQuery(Query query){
 		
@@ -83,33 +93,35 @@ public class SearchPerformer {
 		return res;
 	}
 	
-	public PostingsList rankedQuery(Query query, int rankingType){
+	public PostingsList rankedQuery(Query query, Index index, int rankingType){
 		
-		int N = Index.docIDs.size();
+		int N = index.docIDsToFilepath().size();
 		double[] scores = new double[N];
-		int[] length = new int[N];
-		PostingsList plist = null;
 		double wtq;
 		
 		/* puts scores into the array for each document */
 		it = query.terms.iterator();
 		itWeights = query.weights.iterator();
 		while (it.hasNext()){
-			plist = hashedIndex.getPostings(it.next());
+			String queryTerm = it.next();
+			PostingsList plist = index.getPostings(queryTerm);
+			if(plist==null) {System.out.println("Parola non presente nell'indice"+queryTerm); continue;}
+			
 			double idf = Math.log((double)N/((double)plist.get_df()));
 			if(plist.get_df() > IDFcutoff * N ) continue; //index elimination - if doc freq too high, term not significative enough
+			
 			switch(rankingType){
 				case Index.TF_IDF:
-					wtq = itWeights.next() * idf / query.queryLength;
-					plist.tfIdf(scores, wtq,1);	
+					wtq = itWeights.next() * idf / query.terms.size();
+					plist.tfIdf(scores, wtq,1,N);	
 					break;
 				case Index.PAGERANK:
-					plist.justPagerank(scores,hashedIndex.getLeftEigenvector(),1);	
+					plist.justPagerank(scores,index.getLeftEigenvector(),index.docIDsToFilepath() ,1);	
 					break;
 				case Index.COMBINATION:
 					wtq = 1 * idf / query.terms.size();
-					plist.tfIdf(scores, wtq,1);	
-					plist.justPagerank(scores,hashedIndex.getLeftEigenvector(),1000000);	
+					plist.tfIdf(scores, wtq,1,N);	
+					plist.justPagerank(scores,index.getLeftEigenvector(),index.docIDsToFilepath(),1000000);	
 					break;
 				default:
 					break;
@@ -121,14 +133,57 @@ public class SearchPerformer {
 		for (int i=0;i<N;i++){
 			if(scores[i]!=0){
 				PostingsEntry elem = new PostingsEntry(i);
-				elem.score = scores[i]/ ((double) Index.docLengths.get(i+""));
+				elem.score = scores[i]/ ((double) index.docIDsToLengths().get(i+""));
 				res.add(elem);
 			}
 		}
 		res.sortByScores();
-		
 		return res;
 	}
 	
+	
+	
+	  /**
+     *  Searches the index for postings matching the query.
+     */
+    public PostingsList search(Query query, int queryType, int rankingType, int structureType ) {
+    	
+    	PostingsList res = null;
+    	Iterator<String> it;
+
+		try{
+	    	/* use the biword index */
+	    	if(structureType==Index.BIGRAM) {
+	    		Query biwordQuery = new Query(query);
+	    		res=rankedQuery(biwordQuery ,biwordIndex,Index.TF_IDF);
+	    	}
+	    	else{
+				switch (queryType){
+		    		case Index.INTERSECTION_QUERY:
+		    			res=intersectionQuery(query);
+		    			break;
+		    		case Index.PHRASE_QUERY:
+		    			res=phraseQuery(query);
+		    			break;
+		    		case Index.RANKED_QUERY:
+		    			res=rankedQuery(query, hashedIndex, rankingType);
+		    			break;
+		    		default:
+		    			break;	    
+		    	}
+			}
+		}
+		catch (NoSuchElementException e){
+			System.out.println("Empty query. "+e);
+			res=null;
+		}
+		catch (NullPointerException e1){
+			System.out.println("Term not in index. "+e1);
+			res=null;
+		}
+    	
+		return res;
+    }
+    
 	
 }

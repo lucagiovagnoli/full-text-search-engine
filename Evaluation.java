@@ -29,14 +29,16 @@ public class Evaluation {
 	
 	public void es23() throws IOException{
 						
+
 		HashedIndex index = new HashedIndex();
 		index.load();
+		SearchPerformer searcher = new SearchPerformer(index);
 		
 		for(int i=0;i<evaluationQueries.length;i++){
 			String str = evaluationQueries[i];
-			PostingsList pl = index.search(new Query(str), Index.RANKED_QUERY, Index.TF_IDF, 0);
+			PostingsList pl = searcher.search(new Query(str), Index.RANKED_QUERY, Index.TF_IDF, 0);
 			for(int c=0;c<20 && c<pl.size();c++){
-				String mydocPath =  Index.docIDs.get(pl.get(c).docID+"");
+				String mydocPath =  index.docIDsToFilepath().get(pl.get(c).docID+"");
 				String name = (mydocPath.split("/")[3]).split(".txt")[0];
 				System.out.println((i+1)+" "+name);
 			}
@@ -55,7 +57,9 @@ public class Evaluation {
 			File dokDir = new File(dirNames[i]);
 			indexer.processFiles( dokDir );
 		}
-		
+
+		SearchPerformer searcher = new SearchPerformer(indexer.index);
+
 		System.out.println("Average time (us):");			
 		for(int i=0;i<evaluationQueries.length;i++){
 			String str = evaluationQueries[i];
@@ -64,7 +68,7 @@ public class Evaluation {
 			double tries = 100;
 			for(int z=0;z<tries;z++){ // average time over "tries" number of tentatives
 				long t0 = System.nanoTime();
-				PostingsList pl = indexer.index.search(new Query(str), Index.RANKED_QUERY, Index.TF_IDF, 0);
+				PostingsList pl = searcher.search(new Query(str), Index.RANKED_QUERY, Index.TF_IDF, 0);
 				long t1 = System.nanoTime();
 				avg += t1-t0;
 			}
