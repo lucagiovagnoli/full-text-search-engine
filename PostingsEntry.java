@@ -9,6 +9,7 @@
 package ir;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
@@ -35,8 +36,9 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
 		positions.add(offset);
 	}
 	
-	public void computeScore(int N,int df){
-		this.score = this.frequency * Math.log10(N/df);
+	public void computeScore(int N,int df, HashMap<String,Integer> docLengths){
+		System.out.println(docLengths.get(""+docID));
+		this.score = this.frequency * Math.log(N/df) / docLengths.get(""+docID);
 	}
 	
 	/** Algorithm for **/

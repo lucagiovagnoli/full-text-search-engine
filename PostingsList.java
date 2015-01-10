@@ -9,6 +9,7 @@
 package ir;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.io.Serializable;
@@ -22,7 +23,6 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
     
     /** The postings list as a linked list. */
     private LinkedList<PostingsEntry> list = new LinkedList<PostingsEntry>();
-    private int cf = 0;
     
     /**  Number of postings in this list  */
     public int size() {
@@ -34,16 +34,6 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
     	return list.size();
     }
     
-    /** return the term frequency in the collection **/
-    public int get_cf (){
-    	return cf;
-    }
-    
-    /** set the term frequency in the collection**/
-    public void set_cf(int newValue){
-    	cf = newValue;
-    }
-
     /**  Returns the ith posting */
     public PostingsEntry get( int i ) {
 	return list.get( i );
@@ -79,7 +69,7 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
 		list.add(elem);
     }
     
-    /* Sorting useless because implicit in the inserting of assignment 1*
+    /* Sorting useless because implicit in the inserting of assignment 1*/
 //    public void sortList(){
 //		Collections.sort(list); 
 //    }
@@ -124,14 +114,14 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
 	}
 	
 	/** RANKED RETRIEVAL **/
-	public void rankEntries(int Ndocs){
+	public void rankEntries(int Ndocs, HashMap<String,Integer> docLengths){
 		
 		Iterator<PostingsEntry> it = list.iterator();
 		PostingsEntry elem = null;
 		
 		while(it.hasNext()){
 			elem = it.next();
-			elem.computeScore(Ndocs, get_df());
+			elem.computeScore(Ndocs, get_df(), docLengths);
 		}
 		
 		Collections.sort(list);

@@ -52,14 +52,12 @@ public class HashedIndex implements Index {
 		if(index.containsKey(token)){
 		    PostingsList lista = index.get(token);
 		    lista.add(docID,offset);
-//		    lista.set_cf(lista.get_cf()+1); // tf++
 		}
 		
 		/* otherwise I first create the Posting's List and then add it */
 		else{
 		    PostingsList lista = new PostingsList();
 		    lista.add(docID,offset);
-//		    lista.set_cf(lista.get_cf()+1); // tf++
 		    index.put(token,lista);
 		}
     }
@@ -153,7 +151,7 @@ public class HashedIndex implements Index {
 	    			String term = it.next();
 	    			
 	    			res = getPostings(term);
-	    			res.rankEntries(getNdocs());	    			
+	    			res.rankEntries(getNdocs(), docLengths);	    			
 	    			
 	    			
 	    			break;
