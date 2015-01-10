@@ -93,11 +93,6 @@ public class HashedIndex implements Index {
     	
     	PostingsList res = null;
     	Iterator<String> it;
-    	
-    	long tavg = 0;
-    	for (int i=0;i<11;i++){    		
-
-    	long t0 = System.nanoTime();
 
 		try{
 			switch (queryType){
@@ -113,7 +108,7 @@ public class HashedIndex implements Index {
 	    				String term = it.next();
 	    				PostingsList temp = getPostings(term);
 	    				if (temp==null){
-	    					//System.out.println("Parola "+term + " non presente nell'indice.");
+	    					System.out.println("Parola "+term + " non presente nell'indice.");
 	    					throw new NullPointerException();
 	    				}
 	    				sortedPostings.add(temp);
@@ -138,7 +133,7 @@ public class HashedIndex implements Index {
 	    				PostingsList temp = getPostings(term);
 
 	    				if (temp==null) {
-	    					//System.out.println("Parola "+term + " non presente nell'indice.");
+	    					System.out.println("Parola "+term + " non presente nell'indice.");
 	    					throw new NullPointerException();
 	    				}
 	    				res = res.positional((temp),relativeOff);
@@ -150,24 +145,16 @@ public class HashedIndex implements Index {
 	    	}
 		}
 		catch (NoSuchElementException e){
-			//System.out.println("Empty query. "+e);
+			System.out.println("Empty query. "+e);
 			res=null;
 		}
 		catch (NullPointerException e1){
-			//System.out.println("Term not in index. "+e1);
+			System.out.println("Term not in index. "+e1);
 			res=null;
 		}
 	    	
     	//System.out.println(res);
-    	
-		long t1 = System.nanoTime();
-		long tRes = t1-t0;
-		//System.out.println("Time for evaluating the query (ns): "+tRes);
-		
-		if(i!=0) tavg+=tRes;
-    	}
-    	tavg/=10;
-    	System.out.println(query.terms+" "+tavg);
+    
 		return res;
     }
     
