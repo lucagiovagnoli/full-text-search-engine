@@ -199,7 +199,7 @@ public class SearchGUI extends JFrame {
 				buf.append( filename );
 			    }
 			    if ( queryType == Index.RANKED_QUERY ) {
-				buf.append( "   " + String.format( "%.5f", results.get(i).score )); 
+				buf.append( "   " + String.format( "%.6f", results.get(i).score )); 
 			    }
 			    buf.append( "\n" );
 			}
@@ -343,31 +343,22 @@ public class SearchGUI extends JFrame {
 	Action computePR= new AbstractAction() {
 		public void actionPerformed( ActionEvent e ) {
 
-			double[] leftEigenvector;
-			
-			/* check if the pagerank already exists on disk */
-			File f = new File("indexOnDisk1/pagerank.txt");
-			if(f.exists() && !f.isDirectory()) { 
-				System.out.println("Pagerank già sul disco.");
-				leftEigenvector = (double[]) IndexStoragerOnDisk.loadObjectFromDisk("pagerank.txt");
-				PageRank.docName = (String[]) IndexStoragerOnDisk.loadObjectFromDisk("docNamePR.txt");
-			}
-
-			else{
-				int T = 100;
-		    	int m = 100;
-		    	double c = 0.85;
-	
-			    PageRank pr = new PageRank("./svwiki_links/links10000.txt", c);
-		    	leftEigenvector = pr.computePagerank(algorithm.monteCarlo3, T, m);
-		    	
-		    	IndexStoragerOnDisk.saveObjectToFile(leftEigenvector, "pagerank.txt");
-		    	IndexStoragerOnDisk.saveObjectToFile(PageRank.docName, "docNamePR.txt");
-		    }
-	    	
-			indexer.index.setLeftEigenvector(leftEigenvector);
-	    	TestingPR tester = new TestingPR(PageRank.docName ,leftEigenvector);
-	    	tester.printFirstKResults();
+			/*
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * 
+			 */
 	    	
 		}
 		};

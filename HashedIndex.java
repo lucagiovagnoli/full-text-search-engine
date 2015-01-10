@@ -10,6 +10,9 @@
 
 package ir;
 
+import ir.PageRank.algorithm;
+
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,14 +26,42 @@ public class HashedIndex implements Index {
 
     /** The index as a hashtable. */
     private HashMap<String,PostingsList> index = new HashMap<String,PostingsList>();
-
-  //  private HashMap<String,Integer> docEuclideanLenghts = new HashMap<String,Integer>();
-  //  private HashMap<String,Integer> wordOccurrences = new HashMap<String,Integer>();
-    
     private boolean loadedFromFile = false;
     private IndexStoragerOnDisk storager = new IndexStoragerOnDisk(this);
-    private double[] leftEigenvector;
-    
+    private HashMap<String,Double> leftEigenvector;
+
+    public  HashedIndex(){
+		
+		/* check if the pagerank already exists on disk */
+		File f = new File("indexOnDisk1/pagerank.txt");
+		if(f.exists() && !f.isDirectory()) { 
+			System.out.println("Pagerank già sul disco.");
+			leftEigenvector = (HashMap<String,Double>) IndexStoragerOnDisk.loadObjectFromDisk("pagerank.txt");
+			PageRank.docName = (String[]) IndexStoragerOnDisk.loadObjectFromDisk("docNamePR.txt");
+		}
+
+		else{
+			int T = 100;
+	    	int m = 100;
+	    	double c = 0.85;
+
+		    PageRank pr = new PageRank("./svwiki_links/links.txt", c);
+	    	leftEigenvector = pr.computePagerank(algorithm.monteCarlo3, T, m);
+	    	
+	    	IndexStoragerOnDisk.saveObjectToFile(leftEigenvector, "pagerank.txt");
+	    	IndexStoragerOnDisk.saveObjectToFile(PageRank.docName, "docNamePR.txt");
+	    }
+    	
+    	//TestingPR tester = new TestingPR(leftEigenvector);
+    	//tester.printFirstKResults();
+    	
+    	
+    }
+
+    public HashMap<String,Double> getLeftEigenvector(){
+    	return leftEigenvector;
+    }
+
     public void load(){ 
     	storager.loadManagementMapsFromDisk();
     	loadedFromFile = true;
@@ -42,11 +73,7 @@ public class HashedIndex implements Index {
     public int size(){
     	return index.keySet().size();    	
     }
-    
-    public void setLeftEigenvector(double[] leftEigenvector){
-    	this.leftEigenvector = leftEigenvector;
-    }
-    
+        
     /**
      *  Inserts this token in the index.
      */
@@ -103,90 +130,21 @@ public class HashedIndex implements Index {
     	
     	PostingsList res = null;
     	Iterator<String> it;
+    	SearchPerformer searcher = new SearchPerformer(this);
 
 		try{
 			switch (queryType){
 	    		case Index.INTERSECTION_QUERY:
-	    			
-	       			/* I need to order the lists over the # of elements in order
-	    			 * to optimize the intersection algorithm */	
-	    			
-	    		    /* extract all posting lists*/
-	    	    	it = query.terms.iterator();
-	    	    	LinkedList<PostingsList> sortedPostings = new LinkedList<PostingsList>();
-	    			while(it.hasNext()){
-	    				String term = it.next();
-	    				PostingsList temp = getPostings(term);
-	    				if (temp==null){
-	    					System.out.println("Parola "+term + " non presente nell'indice.");
-	    					throw new NullPointerException();
-	    				}
-	    				sortedPostings.add(temp);
-	    	   		}    	
-	    				
-	    			/* sort posting Lists */
-	    			Collections.sort(sortedPostings);
-	    			
-	    			res = sortedPostings.remove();
-	    			while(sortedPostings.isEmpty() == false){
-	       				res = res.intersection(sortedPostings.remove());
-	       			}    				
+	    			res=searcher.intersectionQuery(query);
 	    			break;
-
 	    		case Index.PHRASE_QUERY:
-	    			int relativeOff = 1;
-	    			
-	    	    	it = query.terms.iterator();
-	    	    	res = getPostings(it.next());
-	    			while(it.hasNext()){
-	    				String term = it.next();
-	    				PostingsList temp = getPostings(term);
-
-	    				if (temp==null) {
-	    					System.out.println("Parola "+term + " non presente nell'indice.");
-	    					throw new NullPointerException();
-	    				}
-	    				res = res.positional(temp,relativeOff);
-		    			relativeOff++;
-	    			}
+	    			res=searcher.phraseQuery(query);
 	    			break;
-
 	    		case Index.RANKED_QUERY:
-	    			
-	    			int N = Index.docIDs.size();
-	    			double[] scores = new double[N];
-	    			PostingsList plist = null;
-	    			
-	    			/* puts scores into the array for each document */
-	    			it = query.terms.iterator();
-	    			while (it.hasNext()){
-		    			plist = getPostings(it.next());
-		    			double wtq = 1; // FastCosineScore !!
-//		    			double wtq = 1 * Math.log((double)N/((double)plist.get_df())) / Math.sqrt((double) query.terms.size());
-		    			plist.rankedRetr(scores, wtq);	
-	    			}
-	    				    			
-	    			/* Construct resulting posting list */
-	    			res = new PostingsList();
-	    			for (int i=0;i<N;i++){
-	    				if(scores[i]!=0){
-	    					PostingsEntry elem = new PostingsEntry(i);
-	    					elem.score = scores[i];
-	    					res.add(elem);
-	    				}
-	    			}
-	    			
-	    			res.sortByScores();
-	    			
+	    			res=searcher.rankedQuery(query, rankingType);
 	    			break;
 	    		default:
 	    			break;	    
-	    			
-	    		//case Index.PAGERANK:
-	    			
-	    			
-	    			
-	    			
 	    	}
 		}
 		catch (NoSuchElementException e){
@@ -196,9 +154,7 @@ public class HashedIndex implements Index {
 		catch (NullPointerException e1){
 			System.out.println("Term not in index. "+e1);
 			res=null;
-		}
-	    	
-    	//System.out.println(res);
+		}	    	
     
 		return res;
     }

@@ -3,23 +3,25 @@ package ir;
 import ir.PageRank.algorithm;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 public class TestingPR {
 	
-	String[] docName; 
 	private int[] targetDocNames = {1081,522,454,2634,365,36,526,3930,1324,483,7031,3094,2381,1306,9765,6287,1432,4762,2353,5608,5115,5621,425,6070,838,6722,8184,1584,3931,6907,3105,723,6074,2635,8071,8098,2343,2136,21,1524,837,6039,3743,2,4919,664,6451,8813,5559,2134};
 	private double[] targetPR = {0.00393,0.00382,0.00357,0.00354,0.00286,0.00277,0.00269,0.00264,0.00246,0.00239,0.00235,0.00228,0.00221,0.00214,0.00192,0.00192,0.00188,0.00186,0.00186,0.00176,0.00170,0.00169,0.00160,0.00156,0.00155,0.00154,0.00152,0.00150,0.00149,0.00149,0.00148,0.00143,0.00142,0.00142,0.00141,0.00140,0.00138,0.00137,0.00137,0.00137,0.00136,0.00135,0.00134,0.00132,0.00132,0.00131,0.00131,0.00129,0.00127,0.00127};
 	
 	public static int K=50;
 	List<PRelement> sortedDocsPR;
 	
+    /* structure to represent the solution and be able to sort it */
 	private class PRelement implements Comparable<PRelement>{
-		int docNumber;
+		String docName;
 		double pagerank;
-		public PRelement(int docNumber,double pagerank){
-			this.docNumber = docNumber;
+		public PRelement(String docName,double pagerank){
+			this.docName = docName;
 			this.pagerank = pagerank;
 		}
 
@@ -29,18 +31,18 @@ public class TestingPR {
 			else return 1;			}
 	}
 	
-	public TestingPR(String[] docName, double[] leftEigenvector) {
-		
-		this.docName = docName;
+	public TestingPR(HashMap<String,Double> leftEigenvector) {
 		builtSortedListPR(leftEigenvector);	
 	}
 	
-	private void builtSortedListPR(double[] leftEigenvector){
+	private void builtSortedListPR(HashMap<String,Double> leftEigenvector){
 		
 		this.sortedDocsPR = new LinkedList<PRelement>();
 		// fill the list to be sorted
-		for(int i=0;i<leftEigenvector.length;i++){
-			sortedDocsPR.add(new PRelement(i,leftEigenvector[i]));
+		Iterator<String> it = leftEigenvector.keySet().iterator();
+		while(it.hasNext()){
+			String key = it.next();
+			sortedDocsPR.add(new PRelement(key,leftEigenvector.get(key)));
 		}
 		Collections.sort(sortedDocsPR); 
 	}
@@ -49,7 +51,7 @@ public class TestingPR {
 		
 		for (int i=0;i<K && i<sortedDocsPR.size();i++){
     		Double rank = sortedDocsPR.get(i).pagerank;
-    		String doc = docName[sortedDocsPR.get(i).docNumber];
+    		String doc = sortedDocsPR.get(i).docName;
     		System.out.println((i+1)+": "+doc+"\t"+ rank);   
     	}
 	}
@@ -58,7 +60,7 @@ public class TestingPR {
 		
 		for (int i=sortedDocsPR.size()-K;i>=0 && i<sortedDocsPR.size();i++){
     		Double rank = sortedDocsPR.get(i).pagerank;
-    		String doc = docName[sortedDocsPR.get(i).docNumber];
+    		String doc = sortedDocsPR.get(i).docName;
     		System.out.println((i+1)+": "+doc+"\t"+ rank);   
     	}
 	}
@@ -68,7 +70,7 @@ public class TestingPR {
 		double avgDst =0, avgDiff=0;
 		
 		for (int i=0;i<K;i++){
-    		String doc = docName[sortedDocsPR.get(i).docNumber];
+    		String doc = sortedDocsPR.get(i).docName;
     		Double rank = sortedDocsPR.get(i).pagerank;
 			for (int j=0;j<K;j++){
 				if(Integer.parseInt(doc) == targetDocNames[j]){
@@ -90,7 +92,7 @@ public class TestingPR {
 		System.out.println("Average document distance from solution: "+avgDst/(double)K);
 		System.out.println("Avg pagerank difference from solutioin: "+avgDiff/(double)K);
 		
-		return avgDst;
+		return avgDst/(double)K;
 	}
 	
 
@@ -118,6 +120,47 @@ public class TestingPR {
 		
 	}
 	
+	public static void someGraphs(){
+		
+		int[] mValues = {1,2,5,10,20,100,200,500};
+		long[] times = new long[mValues.length];
+		double[] avgs = new double[mValues.length];
+		
+		PageRank pr = new PageRank("./svwiki_links/links10000.txt", 0.85);
+
+		for(int i=0;i<mValues.length;i++){
+			
+			int m = mValues[i];
+			int T = 100;
+			
+			long t0 = System.nanoTime();
+			
+			HashMap<String,Double> leftEigenvector = pr.computePagerank(algorithm.monteCarlo3, T, m);
+			
+			long t1 = System.nanoTime();
+			System.out.println("Time (ms): "+((t1-t0)/1000000));
+			times[i] = (t1-t0)/1000000;
+			
+			TestingPR tester = new TestingPR(leftEigenvector);
+			avgs[i] = tester.printfirstKtests();
+		}
+
+		/* prepare output for python file */
+		System.out.print("xm = [");
+		for(int i=0;i<mValues.length;i++){
+			System.out.print(mValues[i]+",");
+		}
+		System.out.print("]\n yt = [");
+		for(int i=0;i<mValues.length;i++){
+			System.out.print(times[i]+",");
+		}
+		System.out.print("]\n ya = [");
+		for(int i=0;i<mValues.length;i++){
+			System.out.print(avgs[i]+",");
+		}
+		
+	}
+	
 	
     /* --------------------------------------------- */
 
@@ -133,24 +176,20 @@ public class TestingPR {
     	int m = 500;
     	double c = 0.85;
 
-	    PageRank pr = new PageRank(args[0], c);
+	//    PageRank pr = new PageRank("./svwiki_links/links10000.txt", c);
 
-		long t0 = System.nanoTime();
-
-//    	double[] leftEigenvector = pr.computePagerank(algorithm.powerIteration, T, m);
-//    	double[] leftEigenvector = pr.computePagerank(algorithm.approxNoSinks, T, m);
-//    	double[] leftEigenvector = pr.computePagerank(algorithm.monteCarlo1, T, m);
-//    	double[] leftEigenvector = pr.computePagerank(algorithm.monteCarlo2, T, m);
-    	double[] leftEigenvector = pr.computePagerank(algorithm.monteCarlo3, T, m);
+	//    	HashMap<String,Double> leftEigenvector = pr.computePagerank(algorithm.powerIteration, T, m);
+//    	HashMap<String,Double> leftEigenvector = pr.computePagerank(algorithm.approxNoSinks, T, m);
+//    	HashMap<String,Double> leftEigenvector = pr.computePagerank(algorithm.monteCarlo1, T);
+//    	HashMap<String,Double> leftEigenvector = pr.computePagerank(algorithm.monteCarlo2, T, m);
+//		HashMap<String,Double> leftEigenvector = pr.computePagerank(algorithm.monteCarlo3, T, m);
     	
-		long t1 = System.nanoTime();
-		System.out.println("Time (ms): "+((t1-t0)/1000000));
-    	
-    	TestingPR tester = new TestingPR(PageRank.docName ,leftEigenvector);
+	//	TestingPR tester = new TestingPR(leftEigenvector);
     	//tester.printTest2();
     	//tester.printFirstKResults();
     	//tester.printLastKResults();
-    	tester.printfirstKtests();
+    	//tester.printfirstKtests();
+    	TestingPR.someGraphs();
 		 
     }
     

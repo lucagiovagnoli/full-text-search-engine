@@ -22,13 +22,12 @@ public class PageRank{
 	}
 
     //Random rnd = new SecureRandom(); // SLOW but GOOD ;)
-    public static Random rnd = new Random(); 
-    
-    private double[] leftEigenvector;
+    public static Random rnd = new Random();     
+    private HashMap<String,Double> leftEigenvector = new HashMap<String,Double>();
     private int numberOfDocs; //real n. of docs
     private int N;
     private double c;
-
+    
     /**  
      *   Maximal number of documents. We're assuming here that we
      *   don't have more docs than we can keep in main memory.
@@ -168,28 +167,32 @@ public class PageRank{
     /**
      *   Computes the pagerank of each document.
      */
-    public double[] computePagerank(algorithm method, int T, int m) {
+    public HashMap<String,Double> computePagerank(algorithm method, int T, int m) {
     	
-    	leftEigenvector = new double[numberOfDocs];
+    	double[] le = new double[numberOfDocs];
     	
     	switch(method){
     	case powerIteration:
-        	leftEigenvector = powerIteration();
+    		le = powerIteration();
     		break;
     	case approxNoSinks:
-        	leftEigenvector = approximationPagerank();
+    		le = approximationPagerank();
     		break;
     	case monteCarlo1:
-        	leftEigenvector = monteCarlo1(T);
+    		le = monteCarlo1(T);
     		break;
     	case monteCarlo2:
-        	leftEigenvector = monteCarlo2(T,m);
+    		le = monteCarlo2(T,m);
     		break;
     	case monteCarlo3:
-        	leftEigenvector = monteCarlo3(T,m);
+    		le = monteCarlo3(T,m);
     		break;
     	}		
-    	    	
+    	
+    	for (int i=0;i<numberOfDocs;i++){
+    		leftEigenvector.put(docName[i], le[i]);
+    	}
+    	
     	return leftEigenvector;
     }
     

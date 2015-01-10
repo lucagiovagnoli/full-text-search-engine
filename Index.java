@@ -41,10 +41,10 @@ public interface Index {
     public PostingsList search( Query query, int queryType, int rankingType, int structureType );
     public void cleanup();
     
+    public HashMap<String,Double> getLeftEigenvector();
     public void save();
     public void load();
     public int size();
-    public void setLeftEigenvector(double[] leftEigenvector);
 
 }
 		    
