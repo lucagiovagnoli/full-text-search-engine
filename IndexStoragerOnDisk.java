@@ -64,7 +64,7 @@ public class IndexStoragerOnDisk{
 		while (it.hasNext()){
 			String docID = it.next();
 			Integer offset = docLengths.get(docID);
-		    Index.docLengths.put( "" + docID, offset);
+		    Index.docLengths.put(docID, offset);
 		}
 		termFileMap = (HashMap<String,String>) loadObjectFromDisk("termFileMap");
 	}
