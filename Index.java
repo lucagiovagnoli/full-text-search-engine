@@ -32,7 +32,7 @@ public interface Index {
     public static final int BIGRAM = 1; 
     public static final int SUBPHRASE = 2; 
 	
-    public static HashMap<String,String> docIDsToTitles = new HashMap<String,String>();
+    public static HashMap<String,String> filenameToTitles = new HashMap<String,String>();
     
     public HashMap<String,String> docIDsToFilepath();
     public HashMap<String,Integer> docIDsToLengths();

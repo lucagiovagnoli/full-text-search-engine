@@ -141,6 +141,57 @@ public class SearchPerformer {
 		return res;
 	}
 	
+	 /** Let the maximum indexed phrase length be n words (n = 2 in your case). Let the query length be m.
+	  * 
+	  * First, an min(n,m)-­‐gram ranked retrieval is performed. (As an example, a 3-­‐gram 
+	  * retrieval in the svwiki/files/1000 data set with the query tillvarons yttersta
+	  * grunder returns two matches, documents 23 and 47.)  
+	  * 
+	  * If less than k documents are returned, proceed to do an (n–1)-­‐gram retrieval. (As an 
+	  * example, a 2-­‐gram (bi-­‐gram) retrieval in the svwiki/files/1000 data set with the 
+	  * query tillvarons yttersta grunder returns three matches, documents 23, 47, and 199.)  
+	  * 
+	  * If less than k documents are returned from the (n–1)-­‐gram retrieval, and n > 1, proceed 
+	  * to do an (n–2)-­‐gram retrieval. Repeat until k documents are found or until n = 1. (As an 
+	  * example, a uni-­‐gram (single term) retrieval in the svwiki/files/1000 data set with
+	  * the query tillvarons yttersta grunder returns 33 matches.) 
+	  * */
+	private PostingsList subphraseRetrieval(Query query){
+
+		int k=5; //minimum number of documents that we want to be retrieved
+		PostingsList bigramRes=null,unigramRes=null;
+		
+		if(query.terms.size()>=2){ //if at least 2 terms in the query I perform bigram retrieval
+	    	Query biwordQuery = new Query(query);
+	    	bigramRes =rankedQuery(biwordQuery ,biwordIndex,Index.TF_IDF); //bigram retrieval
+	    	
+	    	if(bigramRes.size()<k){
+				unigramRes = rankedQuery(query, hashedIndex, Index.TF_IDF); //unigram retrieval
+				double factor= computeFactorForSubphrase(bigramRes,unigramRes);
+				bigramRes.multiplyAllScoresBy(factor); //weight the score more than the unigram
+				unigramRes.merge(bigramRes);
+				unigramRes.sortByScores();
+				return unigramRes;
+	    	}
+	    	else return bigramRes;	    	
+		}
+		
+		unigramRes = rankedQuery(query, hashedIndex, Index.TF_IDF); //unigram retrieval
+		return unigramRes;
+
+	}
+	
+	private double computeFactorForSubphrase(PostingsList bigram, PostingsList unigram){
+
+		if(bigram.size()==0 || unigram.size()==0) return 1;
+		
+		PostingsEntry e = bigram.get(bigram.size()-1);
+		PostingsEntry e1 = unigram.get(0);
+		
+		if(e.score > e1.score) return 1; //if the worst score of bigram is already better than the best of unigram return 1
+		else return e1.score/e.score +1; //else return the factor needed to get the worst of the bigram better than the best of the unigram
+		
+	}
 	
 	
 	  /**
@@ -152,12 +203,15 @@ public class SearchPerformer {
     	Iterator<String> it;
 
 		try{
-	    	/* use the biword index */
+	    	/* if BIGRAM I implicitly perform RANKED RETRIEVAL using the biword index */
 	    	if(structureType==Index.BIGRAM) {
 	    		Query biwordQuery = new Query(query);
 	    		res=rankedQuery(biwordQuery ,biwordIndex,Index.TF_IDF);
 	    	}
-	    	else{
+	    	else if(structureType==Index.SUBPHRASE) {
+	    		res = subphraseRetrieval(query);
+	    	}
+	    	else{ //UNIGRAM case
 				switch (queryType){
 		    		case Index.INTERSECTION_QUERY:
 		    			res=intersectionQuery(query);

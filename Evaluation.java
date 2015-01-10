@@ -77,10 +77,50 @@ public class Evaluation {
 		}		
 	}
 	
+	public void es34(){
+		
+		String[] queries = new String[]{"mellan olika alternativ","den tyska huvudstaden","tillvarons yttersta grunder"};
+		
+		Indexer indexer = new Indexer();
+		
+		IndexStoragerOnDisk.loadArticleTitles();
+
+		File dokDir = new File(dirNames[0]); //only the first 1000 documents for this exercise
+		indexer.processFiles( dokDir );
+		indexer.processFilesBiword(dokDir);
+		
+		SearchPerformer searcher = new SearchPerformer(indexer.index,indexer.biwordIndex);
+
+		for(int i=0;i<queries.length;i++){
+			String str = queries[i];
+			PostingsList pl = searcher.search(new Query(str), Index.RANKED_QUERY, Index.TF_IDF, Index.UNIGRAM);		
+			for(int c=0;c<10 && c<pl.size();c++){ //look at the first 10 documents
+				String mydocPath =  indexer.index.docIDsToFilepath().get(pl.get(c).docID+"");
+				String name = (mydocPath.split("/")[3]).split(".txt")[0];
+				String title = Index.filenameToTitles.get(name);
+				System.out.println(str+"\t"+(c+1)+"\t\t"+title);
+			}
+			System.out.println();	
+		}		
+		System.out.println();	
+		for(int i=0;i<queries.length;i++){
+			String str = queries[i];
+			PostingsList pl = searcher.search(new Query(str), Index.RANKED_QUERY, Index.TF_IDF, Index.BIGRAM);		
+			for(int c=0;c<10 && c<pl.size();c++){ //look at the first 10 documents
+				String mydocPath =  indexer.index.docIDsToFilepath().get(pl.get(c).docID+"");
+				String name = (mydocPath.split("/")[3]).split(".txt")[0];
+				String title = Index.filenameToTitles.get(name);
+				System.out.println(str+"\t"+(c+1)+"\t\t"+title);
+			}
+			System.out.println();	
+		}	
+		
+	}
+	
 	public static void main(String[] args) throws IOException{
 
 		Evaluation ev = new Evaluation ();
-		ev.es33();
+		ev.es34();
 		
 	}
 	

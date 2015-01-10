@@ -207,7 +207,7 @@ public class SearchGUI extends JFrame {
 			    if ( queryType == Index.RANKED_QUERY ) buf.append( "   " + String.format( "%.6f", results.get(i).score )); 
 			   
 			    /*print name of the first 10 documents*/
-		        buf.append("\t"+ Index.docIDsToTitles.get(filename.split("/")[3].split(".txt")[0]));
+		        buf.append("\t"+ Index.filenameToTitles.get(filename.split("/")[3].split(".txt")[0]));
 			    
 			    buf.append( "\n" );
 			}
@@ -255,7 +255,7 @@ public class SearchGUI extends JFrame {
 				    	buf.append( filename );
 				    }
 				    buf.append( "   " + String.format( "%.5f", results.get(i).score ));
-				    buf.append("\t"+ Index.docIDsToTitles.get(filename.split("/")[3].split(".txt")[0]));
+				    buf.append("\t"+ Index.filenameToTitles.get(filename.split("/")[3].split(".txt")[0]));
 				    buf.append( "\n" );
 				}
 		    }

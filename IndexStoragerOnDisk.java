@@ -211,7 +211,7 @@ public class IndexStoragerOnDisk{
 		    String line = "";
 		    while((line=br.readLine()) != null) {
 		    	String[] words = line.split(";");
-			    Index.docIDsToTitles.put(words[0],words[1]);  
+			    Index.filenameToTitles.put(words[0],words[1]);  
 		    }	
 		    br.close();
 	    }

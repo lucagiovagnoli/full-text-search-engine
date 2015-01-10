@@ -12,6 +12,7 @@ public class BiwordIndex implements Index  {
     public HashMap<String, String> docIDs = new HashMap<String,String>();
     public HashMap<String, Integer> docLengths = new HashMap<String,Integer>();
 
+
 	/* hash the concatenation of the 2 words*/
     private HashMap<String,PostingsList> index = new HashMap<String,PostingsList>();
     
@@ -52,6 +53,7 @@ public class BiwordIndex implements Index  {
 	
     public HashMap<String,String> docIDsToFilepath(){return docIDs;}
     public HashMap<String,Integer> docIDsToLengths(){return docLengths;}
+    
 	public void cleanup() {
 	}
 	

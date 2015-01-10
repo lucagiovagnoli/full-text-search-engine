@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.io.Serializable;
 import java.util.Comparator;
-import java.lang.Math;
 
 /**
  *   A list of postings for a given word.
@@ -37,6 +36,33 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
     /**  Returns the ith posting */
     public PostingsEntry get( int i ) {
 	return list.get( i );
+    }
+    
+    public void multiplyAllScoresBy(double a){
+    	
+    	Iterator<PostingsEntry> it = list.iterator();
+    	while(it.hasNext()){
+    		it.next().score *= a;
+    	}
+    }
+    
+    public void merge(PostingsList other){
+    	
+    	if(other==null) return;
+    	Iterator<PostingsEntry> it = other.list.iterator();
+    	while(it.hasNext()){
+    		PostingsEntry e = it.next();
+    		int flag=0;
+    		Iterator<PostingsEntry> it2 = list.iterator();
+        	while(it2.hasNext()){
+        		PostingsEntry e2 = it2.next();
+        		if(e2.docID==e.docID) {
+        			e2.score+=e.score;
+        			flag=1;
+        		}
+        	}
+        	if(flag==0) this.add(e);
+    	}
     }
     
     public void add(PostingsEntry elem){
