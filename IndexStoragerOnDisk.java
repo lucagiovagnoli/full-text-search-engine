@@ -52,19 +52,19 @@ public class IndexStoragerOnDisk{
 	public void loadManagementMapsFromDisk(){
 		HashMap<String,String> docIDs = (HashMap<String,String>) loadObjectFromDisk("IDtoPaths");
 		HashMap<String,Integer> docLengths = (HashMap<String,Integer>) loadObjectFromDisk("IDtoLengths");
-		
-		Iterator<String> it1 = docIDs.keySet().iterator();
-		while (it1.hasNext()){
-			String docID = it1.next();
+				
+		Iterator<String> it = docIDs.keySet().iterator();
+		while (it.hasNext()){
+			String docID = it.next();
 			String path = docIDs.get(docID);
-			index.docIDs.put( "" + docID, path );
+			Index.docIDs.put(docID, path);
 		}
 
-		Iterator<String> it2 = docLengths.keySet().iterator();
-		while (it1.hasNext()){
-			String docID = it1.next();
+		it = docLengths.keySet().iterator();
+		while (it.hasNext()){
+			String docID = it.next();
 			Integer offset = docLengths.get(docID);
-		    index.docLengths.put( "" + docID, offset);
+		    Index.docLengths.put( "" + docID, offset);
 		}
 		termFileMap = (HashMap<String,String>) loadObjectFromDisk("termFileMap");
 	}
@@ -140,8 +140,8 @@ public class IndexStoragerOnDisk{
     	}
 		
 		/** Save mapping ID to paths and ID to lenghts **/
-		saveObjectToFile(index.docIDs,"IDtoPaths");
-		saveObjectToFile(index.docLengths,"IDtoLengths");
+		saveObjectToFile(Index.docIDs,"IDtoPaths");
+		saveObjectToFile(Index.docLengths,"IDtoLengths");
 		
 		/** save TermFileMap on Disk **/
 		saveObjectToFile(termFileMap,"termFileMap");
