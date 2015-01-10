@@ -12,6 +12,7 @@ package ir;
 import ir.PageRank.algorithm;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -22,6 +23,8 @@ import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
+
+import com.ibm.icu.impl.data.TokenIterator;
 
 
 /**
@@ -201,6 +204,10 @@ public class SearchGUI extends JFrame {
 			    if ( queryType == Index.RANKED_QUERY ) {
 				buf.append( "   " + String.format( "%.6f", results.get(i).score )); 
 			    }
+			    
+			    /*print name of the first 10 documents*/
+		        buf.append("\t"+ Index.docIDsToTitles.get(filename.split("/")[3].split(".txt")[0]));
+			    
 			    buf.append( "\n" );
 			}
 		    }
@@ -221,36 +228,38 @@ public class SearchGUI extends JFrame {
 		    // Check that a ranked search has been made prior to the relevance feedback
 		    StringBuffer buf = new StringBuffer();
 		    if (( results != null ) && ( queryType == Index.RANKED_QUERY )) {
-			// Read user relevance feedback selections
-			boolean[] docIsRelevant = { false, false, false, false, false, false, false, false, false, false }; 
-			for ( int i = 0; i<10; i++ ) {
-			    docIsRelevant[i] = feedbackButton[i].isSelected(); 
-			}
-			// Expand the current search query with the documents marked as relevant 
-			query.relevanceFeedback( results, docIsRelevant, indexer );
-			
-			// Perform a new search with the weighted and expanded query. Access to the index is 
-			// synchronized since we don't want to search at the same time we're indexing new files
-			// (this might corrupt the index).
-			synchronized ( indexLock ) {
-			    results = indexer.index.search( query, queryType, rankingType, structureType );
-			}
-			buf.append( "\nSearch after relevance feedback:\n" );
-			buf.append( "\nFound " + results.size() + " matching document(s)\n\n" );
-			for ( int i=0; i<results.size(); i++ ) {
-			    buf.append( " " + i + ". " );
-			    String filename = indexer.index.docIDs.get( "" + results.get(i).docID );
-			    if ( filename == null ) {
-				buf.append( "" + results.get(i).docID );
-			    }
-			    else {
-				buf.append( filename );
-			    }
-			    buf.append( "   " + String.format( "%.5f", results.get(i).score ) + "\n" );
-			}
+				// Read user relevance feedback selections
+				boolean[] docIsRelevant = { false, false, false, false, false, false, false, false, false, false }; 
+				for ( int i = 0; i<10; i++ ) {
+				    docIsRelevant[i] = feedbackButton[i].isSelected(); 
+				}
+				// Expand the current search query with the documents marked as relevant 
+				query.relevanceFeedback( results, docIsRelevant, indexer );
+				
+				// Perform a new search with the weighted and expanded query. Access to the index is 
+				// synchronized since we don't want to search at the same time we're indexing new files
+				// (this might corrupt the index).
+				synchronized ( indexLock ) {
+				    results = indexer.index.search( query, queryType, rankingType, structureType );
+				}
+				buf.append( "\nSearch after relevance feedback:\n" );
+				buf.append( "\nFound " + results.size() + " matching document(s)\n\n" );
+				for ( int i=0; i<results.size(); i++ ) {
+				    buf.append( " " + i + ". " );
+				    String filename = indexer.index.docIDs.get( "" + results.get(i).docID );
+				    if ( filename == null ) {
+				    	buf.append( "" + results.get(i).docID );
+				    }
+				    else {
+				    	buf.append( filename );
+				    }
+				    buf.append( "   " + String.format( "%.5f", results.get(i).score ));
+				    buf.append("\t"+ Index.docIDsToTitles.get(filename.split("/")[3].split(".txt")[0]));
+				    buf.append( "\n" );
+				}
 		    }
 		    else {
-			buf.append( "\nThere was no returned ranked list to give feedback on.\n\n" );
+		    	buf.append( "\nThere was no returned ranked list to give feedback on.\n\n" );
 		    }
 		    resultWindow.setText( buf.toString() );
 		    resultWindow.setCaretPosition( 0 );
@@ -403,8 +412,6 @@ public class SearchGUI extends JFrame {
 		File dokDir = new File( dirNames.get( i ));
 		indexer.processFiles( dokDir );
 	    }
-//**********************************		indexer.index.sortPostings();
-//		System.out.println(indexer.index.getPostings("fysik"));
 	    resultWindow.setText( "\n  Done!" );
 	}
     };

@@ -33,11 +33,11 @@ public class HashedIndex implements Index {
     public  HashedIndex(){
 		
 		/* check if the pagerank already exists on disk */
-		File f = new File("indexOnDisk1/pagerank.txt");
+		File f = new File("indexOnDisk1/pagerank");
 		if(f.exists() && !f.isDirectory()) { 
 			System.out.println("Pagerank già sul disco.");
-			leftEigenvector = (HashMap<String,Double>) IndexStoragerOnDisk.loadObjectFromDisk("pagerank.txt");
-			PageRank.docName = (String[]) IndexStoragerOnDisk.loadObjectFromDisk("docNamePR.txt");
+			leftEigenvector = (HashMap<String,Double>) IndexStoragerOnDisk.loadObjectFromDisk("pagerank");
+			PageRank.docName = (String[]) IndexStoragerOnDisk.loadObjectFromDisk("docNamePR");
 		}
 
 		else{
@@ -48,14 +48,9 @@ public class HashedIndex implements Index {
 		    PageRank pr = new PageRank("./svwiki_links/links.txt", c);
 	    	leftEigenvector = pr.computePagerank(algorithm.monteCarlo3, T, m);
 	    	
-	    	IndexStoragerOnDisk.saveObjectToFile(leftEigenvector, "pagerank.txt");
-	    	IndexStoragerOnDisk.saveObjectToFile(PageRank.docName, "docNamePR.txt");
-	    }
-    	
-    	//TestingPR tester = new TestingPR(leftEigenvector);
-    	//tester.printFirstKResults();
-    	
-    	
+	    	IndexStoragerOnDisk.saveObjectToFile(leftEigenvector, "pagerank");
+	    	IndexStoragerOnDisk.saveObjectToFile(PageRank.docName, "docNamePR");
+	    }    	
     }
 
     public HashMap<String,Double> getLeftEigenvector(){
@@ -64,6 +59,7 @@ public class HashedIndex implements Index {
 
     public void load(){ 
     	storager.loadManagementMapsFromDisk();
+    	storager.loadArticleTitles();
     	loadedFromFile = true;
     }
     public void save(){ 

@@ -113,14 +113,14 @@ public class PostingsList implements Serializable,Comparable<PostingsList> {
 	}
 	
 	/** RANKED RETRIEVAL (TD-IDF) **/
-	public void tfIdf(double[] scores, double wtq,double combinationWeight){
+	public void tfIdf(double[] scores, double wtq, double combinationWeight){
 		
 		Iterator<PostingsEntry> it = list.iterator();
 		PostingsEntry elem = null;
 		
 		while(it.hasNext()){
 			elem = it.next();
-			scores[elem.docID] += combinationWeight * wtq * elem.computeScore(get_df());
+			scores[elem.docID] += combinationWeight * wtq * elem.computeTfIdf(get_df());
 		}
 	}
 	

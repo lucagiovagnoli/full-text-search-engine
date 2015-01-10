@@ -16,9 +16,16 @@ import java.util.LinkedList;
  */
 public class SearchPerformer {
 
+	/** index elimination - cut off high values of idf  
+	 *  ex: "den" has a high doc freq so it is not significative enough   
+	 **/
+	private double IDFcutoff = 1;  //if the term appears in more than IDFcutoffPercentage*documents, it is not considered
+	
 	private PostingsList res = null;
-	private Iterator<String> it;
 	private Index hashedIndex;
+	
+	private Iterator<String> it;
+	private Iterator<Double> itWeights;
 	
 	/**
 	 * 
@@ -86,18 +93,22 @@ public class SearchPerformer {
 		
 		/* puts scores into the array for each document */
 		it = query.terms.iterator();
+		itWeights = query.weights.iterator();
 		while (it.hasNext()){
 			plist = hashedIndex.getPostings(it.next());
+			double idf = Math.log((double)N/((double)plist.get_df()));
+			if(plist.get_df() > IDFcutoff * N ) continue; //index elimination - if doc freq too high, term not significative enough
 			switch(rankingType){
 				case Index.TF_IDF:
-					wtq = 1 * Math.log((double)N/((double)plist.get_df())) / query.terms.size();
+					wtq = itWeights.next() * idf / query.queryLength;
 					plist.tfIdf(scores, wtq,1);	
 					break;
 				case Index.PAGERANK:
 					plist.justPagerank(scores,hashedIndex.getLeftEigenvector(),1);	
 					break;
 				case Index.COMBINATION:
-					wtq = 1 * Math.log((double)N/((double)plist.get_df())) / query.terms.size();
+					wtq = 1 * idf / query.terms.size();
+					plist.tfIdf(scores, wtq,1);	
 					plist.justPagerank(scores,hashedIndex.getLeftEigenvector(),1000000);	
 					break;
 				default:

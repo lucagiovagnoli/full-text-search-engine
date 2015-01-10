@@ -5,6 +5,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -64,6 +65,19 @@ public class IndexStoragerOnDisk{
 		termFileMap = (HashMap<String,String>) loadObjectFromDisk("termFileMap");
 	}
 	
+	public void loadArticleTitles(){
+		 
+	    try{
+		    BufferedReader br = new BufferedReader(new FileReader("svwiki_links/articleTitles.txt"));
+		    String line = "";
+		    while((line=br.readLine()) != null) {
+		    	String[] words = line.split(";");
+			    Index.docIDsToTitles.put(words[0],words[1]);  
+		    }	
+		    br.close();
+	    }
+	    catch(IOException excep){System.out.println("Errore in lettura nomi files: "+excep);}	
+	}
 	
 	public static Object loadObjectFromDisk(String filename){
 		Object res=null;

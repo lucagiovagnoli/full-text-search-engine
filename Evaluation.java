@@ -1,8 +1,10 @@
 package ir;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.LinkedList;
 
 
 public class Evaluation {
@@ -17,7 +19,8 @@ public class Evaluation {
 														"sex i reklam",
 														"lutande tornet i pisa",
 														"genteknik"};
-			 	
+
+	String[] dirNames = new String[]{"svwiki/files/1000","svwiki/files/2000","svwiki/files/3000","svwiki/files/4000","svwiki/files/5000","svwiki/files/6000","svwiki/files/7000","svwiki/files/8000","svwiki/files/9000","svwiki/files/10000"};
 	
 	public Evaluation() {
 		// TODO Auto-generated constructor stub
@@ -40,10 +43,40 @@ public class Evaluation {
 		}
 	}
 	
+	
+	/** compute time taken for each query when the index is already in memory 
+	 * (used to compute changing on times with the "Index Elimination" speedup)
+	 * */
+	public void es33() {
+		
+		Indexer indexer = new Indexer();
+
+		for (int i=0; i<dirNames.length; i++ ) {
+			File dokDir = new File(dirNames[i]);
+			indexer.processFiles( dokDir );
+		}
+		
+		System.out.println("Average time (us):");			
+		for(int i=0;i<evaluationQueries.length;i++){
+			String str = evaluationQueries[i];
+
+			double avg = 0;
+			double tries = 100;
+			for(int z=0;z<tries;z++){ // average time over "tries" number of tentatives
+				long t0 = System.nanoTime();
+				PostingsList pl = indexer.index.search(new Query(str), Index.RANKED_QUERY, Index.TF_IDF, 0);
+				long t1 = System.nanoTime();
+				avg += t1-t0;
+			}
+//			System.out.println(str+"\t\t- Average time (us) over "+tries+" tries: "+((avg/tries)/1000));			
+			System.out.println(avg/tries);			
+		}		
+	}
+	
 	public static void main(String[] args) throws IOException{
 
 		Evaluation ev = new Evaluation ();
-		ev.es23();
+		ev.es33();
 		
 	}
 	

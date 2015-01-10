@@ -34,7 +34,8 @@ public interface Index {
 	
     public HashMap<String, String> docIDs = new HashMap<String,String>();
     public HashMap<String, Integer> docLengths = new HashMap<String,Integer>();
-
+    public HashMap<String,String> docIDsToTitles = new HashMap<String,String>();
+    
     public void insert( String token, int docID, int offset );
     public Iterator<String> getDictionary();
     public PostingsList getPostings( String token );
